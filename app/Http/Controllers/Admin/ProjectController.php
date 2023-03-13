@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Project;
+use App\Models\Technology;
 use App\Models\Type;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
@@ -28,7 +29,8 @@ class ProjectController extends Controller
     {
         $project = new Project();
         $types = Type::all();
-        return view('admin.projects.create', compact('project', 'types'));
+        $technologies = Technology::select('id', 'label')->orderBy('id')->get();
+        return view('admin.projects.create', compact('project', 'types', 'technologies'));
     }
 
     /**
@@ -42,18 +44,20 @@ class ProjectController extends Controller
                 'project_url' => 'required|string',
                 'image_url' => 'nullable|image|mimes:jpeg,jpg,png',
                 'description' => 'required|string',
-                'type_id' => 'nullable|exists:types,id'
+                'type_id' => 'nullable|exists:types,id',
+                'technologies' => 'nullable|exists:technologies,id'
             ],
             [
-                'name.required' => 'Il nome del progetto è obbligatorio',
-                'name.unique' => 'Non possono esserci due nomi progetto uguali',
-                'name.min' => 'Il nome del progetto deve avere almeno 5 caratteri',
-                'name.max' => 'Il nome del progetto deve avere massimo 50 caratteri',
-                'project_url.required' => 'Il link progetto è obbligatorio',
+                'name.required' => 'Il nome del progetto è obbligatorio.',
+                'name.unique' => 'Non possono esserci due nomi progetto uguali.',
+                'name.min' => 'Il nome del progetto deve avere almeno 5 caratteri.',
+                'name.max' => 'Il nome del progetto deve avere massimo 50 caratteri.',
+                'project_url.required' => 'Il link progetto è obbligatorio.',
                 'image_url.image' => 'L\'immagine deve essere un file di tipo immagine.',
-                'image_url.mimes' => 'Le estensioni accettate sono: jpeg, jpg, png',
-                'description.required' => 'La descrizione è obbligatoria',
-                'type_id' => 'Tipo non valido'
+                'image_url.mimes' => 'Le estensioni accettate sono: jpeg, jpg, png.',
+                'description.required' => 'La descrizione è obbligatoria.',
+                'type_id' => 'Tipo non valido.',
+                'technologies' => 'le tecnologie selezionate non sono valide.'
             ]
         );
 
@@ -67,6 +71,8 @@ class ProjectController extends Controller
 
         $project->fill($data);
         $project->save();
+        // relaziono il progetto con le tecnologie
+        if (Arr::exists($data, 'technologies')) $project->technologies()->attach($data['technologies']);
 
         return to_route('admin.projects.show', $project->id)->with('type', 'success')->with('msg', 'Nuovo progetto creato con successo.');
     }
@@ -85,7 +91,9 @@ class ProjectController extends Controller
     public function edit(Project $project)
     {
         $types = Type::all();
-        return view('admin.projects.edit', compact('project', 'types'));
+        $technologies = Technology::select('id', 'label')->orderBy('id')->get();
+        $project_technologies = $project->technologies->pluck('id')->toArray();
+        return view('admin.projects.edit', compact('project', 'types', 'technologies', 'project_technologies'));
     }
 
     /**
@@ -99,18 +107,20 @@ class ProjectController extends Controller
                 'project_url' => 'required|string',
                 'image_url' => 'nullable|image|mimes:jpeg,jpg,png',
                 'description' => 'required|string',
-                'type_id' => 'nullable|exists:types,id'
+                'type_id' => 'nullable|exists:types,id',
+                'technologies' => 'nullable|exists:technologies,id'
             ],
             [
-                'name.required' => 'Il nome del progetto è obbligatorio',
-                'name.unique' => 'Non possono esserci due nomi progetto uguali',
-                'name.min' => 'Il nome del progetto deve avere almeno 5 caratteri',
-                'name.max' => 'Il nome del progetto deve avere massimo 50 caratteri',
-                'project_url.required' => 'Il link progetto è obbligatorio',
+                'name.required' => 'Il nome del progetto è obbligatorio.',
+                'name.unique' => 'Non possono esserci due nomi progetto uguali.',
+                'name.min' => 'Il nome del progetto deve avere almeno 5 caratteri.',
+                'name.max' => 'Il nome del progetto deve avere massimo 50 caratteri.',
+                'project_url.required' => 'Il link progetto è obbligatorio.',
                 'image_url.image' => 'L\'immagine deve essere un file di tipo immagine.',
-                'image_url.mimes' => 'Le estensioni accettate sono: jpeg, jpg, png',
-                'description.required' => 'La descrizione è obbligatoria',
-                'type_id' => 'Tipo non valido'
+                'image_url.mimes' => 'Le estensioni accettate sono: jpeg, jpg, png.',
+                'description.required' => 'La descrizione è obbligatoria.',
+                'type_id' => 'Tipo non valido.',
+                'technologies' => 'le tecnologie selezionate non sono valide.'
             ]
         );
 
@@ -125,6 +135,9 @@ class ProjectController extends Controller
 
         $project->fill($data);
         $project->save();
+        // assegno le tecnologie
+        if (Arr::exists($data, 'technologies')) $project->technologies()->sync($data['technologies']);
+        else if (count($project->technologies)) $project->technologies()->detach();
 
         return to_route('admin.projects.show', $project->id)->with('type', 'warning')->with('msg', 'Modifica avvenuta con successo.');
     }
@@ -135,6 +148,7 @@ class ProjectController extends Controller
     public function destroy(Project $project)
     {
         if ($project->image_url) Storage::delete($project->image_url);
+        if (count($project->technologies)) $project->technologies()->detach();
 
         $project->delete();
 

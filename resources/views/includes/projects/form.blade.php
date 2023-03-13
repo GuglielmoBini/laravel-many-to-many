@@ -50,8 +50,17 @@
             <div class="col-2">
                 <img id="img-preview" class="img-fluid" src="{{ $project->image_url ? asset('storage/' . $project->image_url) : 'https://marcolanci.it/utils/placeholder.jpg' }}" alt="preview">
             </div>
+            <div class="col-12 mb-3">
+                <h5 class="mb-3">Tecnologie utilizzate</h5>
+                @foreach ($technologies as $technology)
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" id="tech-{{ $loop->iteration }}" value="{{ $technology->id }}" name="technologies[]" @if(in_array($technology->id, old('technologies', $project_technologies ?? []))) checked @endif>
+                    <label class="form-check-label" for="tech-{{ $loop->iteration }}">{{ $technology->label }}</label>
+                  </div>
+                @endforeach
+            </div>
         </div>
-        <div class="d-flex justify-content-center my-2">
+        <div class="d-flex justify-content-center my-3">
             <button type="submit" class="btn btn-success w-25">Salva</button>
         </div>
     </form>
