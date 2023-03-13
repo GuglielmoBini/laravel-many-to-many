@@ -22,6 +22,13 @@
                   <h5 class="card-title">Descrizione</h5>
                   <p class="card-text flex-grow-1">{{ $project->description }}</p>
                   <p class="card-text"><small class="text-muted"><strong>Created: </strong>{{ $project->created_at }}</small></p>
+                  <ul class="p-0 m-0">
+                    @forelse ($project->technologies as $technology)
+                        <li class="badge rounded-pill me-2 bg-{{ $technology->color }}">{{ $technology->label }}</li>
+                    @empty
+                        -
+                    @endforelse
+                  </ul>
                 </div>
                 <div class="card-body border-top d-flex align-items-center justify-content-around">
                   <a href="{{ $project->project_url }}">Project link</a>
