@@ -11,17 +11,20 @@
         @endif
     </header>
     <div class="d-flex flex-column align-items-center">
-        <div class="card mb-3">
-          <div class="row g-0">
+        <div class="@if ($project->image_url) card @endif mb-4">
+          <div class="row g-0 justify-content-center">
+            @if ($project->image_url)                
             <div class="col-4">
               <img src="{{ asset('storage/' . $project->image_url) }}" class="img-fluid w-100 h-100 rounded-start" alt="{{ $project->name }}">
             </div>
-            <div class="col-8">
+            @endif
+            <div class="col-8 @if (!$project->image_url) card @endif">
               <div class="row g-0 h-100 flex-column">
                 <div class="card-body d-flex flex-column">
                   <h5 class="card-title">Descrizione</h5>
                   <p class="card-text flex-grow-1">{{ $project->description }}</p>
                   <p class="card-text"><small class="text-muted"><strong>Created: </strong>{{ $project->created_at }}</small></p>
+                  <p class="card-text"><small class="text-muted"><strong>Type: </strong>{{ $project->type?->label }}</small></p>
                   <ul class="p-0 m-0">
                     @forelse ($project->technologies as $technology)
                         <li class="badge rounded-pill me-2 bg-{{ $technology->color }}">{{ $technology->label }}</li>
