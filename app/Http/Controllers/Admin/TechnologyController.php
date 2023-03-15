@@ -33,7 +33,7 @@ class TechnologyController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'label' => 'required|string|unique:types|max:15',
+            'label' => 'required|string|unique:technologies|max:15',
             'color' => 'nullable|string|max:20',
         ]);
 
